@@ -49,7 +49,7 @@ let jsonParseErrors = new Counter('json_parse_errors');
 export default function () {
     
     group('- Check health to connect system success -', function () {
-        const resCheckhealth = http.get(BASE_URL.URL_HEALTH_CHECK);
+        const resCheckhealth = http.get(BASE_URL.HEALTH_CHECK);
         bodyLengthTrend.add(resCheckhealth.body.length);
 
         const isValidJson = check(resCheckhealth, {
@@ -74,7 +74,7 @@ export default function () {
     sleep(randomIntBetween(1, 3)) // between 1-3 sec
 
     group('- Retrived a data employees successfully -', function () {
-        const resGetAllUser = http.get(BASE_URL.URL_GET_ALL_EMP);
+        const resGetAllUser = http.get(BASE_URL.GET_ALL_EMPLOYEES);
         bodyLengthTrend.add(resGetAllUser.body.length);
 
         const isValidJson = check(resGetAllUser, {
