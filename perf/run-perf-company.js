@@ -47,7 +47,7 @@ let bodyLengthTrend = new Trend('response_body_length');
 let jsonParseErrors = new Counter('json_parse_errors');
 
 export default function () {
-    
+
     group('- Check health to connect system success -', function () {
         const resCheckhealth = http.get(BASE_URL.HEALTH_CHECK);
         bodyLengthTrend.add(resCheckhealth.body.length);
