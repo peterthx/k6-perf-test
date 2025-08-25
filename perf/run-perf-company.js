@@ -35,9 +35,9 @@ export const options = {
         // { duration: '5m', target: 1600 }, // Push to failure
 
         // Gradual recovery
-        { duration: '2m', target: 400 },  // Step back
-        { duration: '2m', target: 100 },  // Further back
-        { duration: '2m', target: 0 },    // Clean shutdown
+        // { duration: '2m', target: 400 },  // Step back
+        // { duration: '2m', target: 100 },  // Further back
+        // { duration: '2m', target: 0 },    // Clean shutdown
     ]
     // vus: 1,
     // duration: '2m'
