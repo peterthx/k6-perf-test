@@ -4,39 +4,53 @@ pipeline {
         stage('Load Test with k6') {
             steps {
                 script {
-                    writeFile file: 'load-test.js', text: '''
+                    // Created file test
+                    writeFile file: 'first_script.js', text: '''
                         import http from "k6/http";
-                        import { check } from "k6";
-                        
-                        export let options = {
-                            vus: 1,
-                            duration: "30s",
-                        };
-                        
-                        export default function() {
-                            let response = http.get("https://httpbin.org/get");
-                            check(response, {
-                                "status is 200": (r) => r.status === 200,
-                            });
+                        import { check, sleep } from "k6";
+                        import exec from "k6/execution";
+
+                        export default function () {
+                          // Get context info
+                          const vu = exec.vu.idInTest; // Virtual User ID
+                          const iter = exec.vu.iterationInScenario; // Iteration number for this VU
+                          const scenario = exec.scenario.name; // Scenario name
+                          const time = exec.instance.currentTestRunDuration; // Time since test started
+
+                          console.log(
+                            `VU: ${vu}, Iter: ${iter}, Scenario: ${scenario}, Time: ${time}ms`
+                          );
+
+                          // Example request
+                          let res = http.get("http://localhost:3000/api/employees");
+                          check(res, {
+                            "status is 200": (r) => r.status === 200,
+                          });
+                          sleep(Math.random() * 2 + 0.5);
                         }
                     '''
-                    
+                    // Jenkins pipeline snippet
                     sh '''
-                        docker run --rm \
-                        -v $PWD:/app \
-                        grafana/k6:latest run \
-                        --out json=/app/results.json \
-                        /app/load-test.js
+                        k6 run \
+                        --out json=results.json \
+                        first_script.js
                     '''
+                    // // เก็บผลลัพธ์
+                    // archiveArtifacts artifacts: 'results.json', fingerprint: true
                     
-                    archiveArtifacts artifacts: 'results.json', fingerprint: true
-                }
-            }
-        }
-        stage('Cleanup') {
-            steps {
-                script {
-                    sh "docker rmi ${DOCKER_IMAGE}:${DOCKER_TAG} || true"
+                    
+                    
+                    // // รัน k6 ผ่าน Docker
+                    // sh '''
+                    //     docker run --rm \
+                    //     -v $PWD:/app \
+                    //     grafana/k6:latest run \
+                    //     --out json=/app/results.json \
+                    //     /app/first_script.js
+                    // '''
+                    
+                    // // เก็บผลลัพธ์
+                    // archiveArtifacts artifacts: 'results.json', fingerprint: true
                 }
             }
         }
