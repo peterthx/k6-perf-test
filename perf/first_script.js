@@ -1,5 +1,5 @@
 import http from "k6/http";
-import { check } from "k6";
+import { check, sleep } from "k6";
 import exec from "k6/execution";
 
 export default function () {
@@ -14,8 +14,9 @@ export default function () {
   );
 
   // Example request
-  let res = http.get("https://test-api.k6.io/");
+  let res = http.get("https://api.restful-api.dev/objects/1");
   check(res, {
     "status is 200": (r) => r.status === 200,
   });
+  sleep(Math.random() * 2 + 0.5);
 }

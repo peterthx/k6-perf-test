@@ -1,0 +1,44 @@
+pipeline {
+    agent any
+    stages {
+        stage('Load Test with k6') {
+            steps {
+                script {
+                    writeFile file: 'load-test.js', text: '''
+                        import http from "k6/http";
+                        import { check } from "k6";
+                        
+                        export let options = {
+                            vus: 1,
+                            duration: "30s",
+                        };
+                        
+                        export default function() {
+                            let response = http.get("https://httpbin.org/get");
+                            check(response, {
+                                "status is 200": (r) => r.status === 200,
+                            });
+                        }
+                    '''
+                    
+                    sh '''
+                        docker run --rm \
+                        -v $PWD:/app \
+                        grafana/k6:latest run \
+                        --out json=/app/results.json \
+                        /app/load-test.js
+                    '''
+                    
+                    archiveArtifacts artifacts: 'results.json', fingerprint: true
+                }
+            }
+        }
+        stage('Cleanup') {
+            steps {
+                script {
+                    sh "docker rmi ${DOCKER_IMAGE}:${DOCKER_TAG} || true"
+                }
+            }
+        }
+    }
+}
