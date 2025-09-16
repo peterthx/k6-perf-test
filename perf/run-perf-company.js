@@ -5,7 +5,7 @@ import { Counter, Trend } from "k6/metrics";
 import { BASE_URL } from "../conf/url.js";
 
 export const options = {
-  // stages: [
+  stages: [
   // Morning ramp-up (simulating business hours)
   // { duration: '3m', target: 10 },   // Early morning
   // { duration: '5m', target: 30 },   // Peak morning
@@ -20,9 +20,9 @@ export const options = {
   // { duration: '10m', target: 60 },  // Afternoon sustain
 
   // Evening wind-down
-  // { duration: '3m', target: 30 },   // Evening reduction
-  // { duration: '2m', target: 10 },   // Late evening
-  // { duration: '2m', target: 0 },    // Night shutdown
+  { duration: '3m', target: 30 },   // Evening reduction
+  { duration: '2m', target: 10 },   // Late evening
+  { duration: '2m', target: 0 },    // Night shutdown
 
   // Progressive load increase
   // { duration: '5m', target: 50 },   // Start conservative
@@ -36,9 +36,9 @@ export const options = {
   // { duration: '2m', target: 400 },  // Step back
   // { duration: '2m', target: 100 },  // Further back
   // { duration: '2m', target: 0 },    // Clean shutdown
-  //  ]
-  vus: 1,
-  duration: "2m",
+    ]
+  // vus: 1,
+  // duration: "2m",
 };
 
 let bodyLengthTrend = new Trend("response_body_length");
