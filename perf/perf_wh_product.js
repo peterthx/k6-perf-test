@@ -1,8 +1,8 @@
 import http from "k6/http";
-import { check, sleep } from "k6";
+import { check, group, sleep } from "k6";
 import exec from "k6/execution";
-import { BASE_URL } from "../conf/url.js";
-import { SERVICE_URL } from "../conf/url.js";
+import { BASE_URL } from "../config/url.js";
+import { SERVICE } from "../config/url.js";
 
 export const options = {
     stages: [
@@ -37,8 +37,8 @@ export const options = {
         // { duration: '2m', target: 100 },  // Further back
         // { duration: '2m', target: 0 },    // Clean shutdown
     ],
-    vus: 1,
-    duration: "2m",
+    // vus: 1,
+    // duration: "2m",
 };
 
 export default function () {
@@ -52,10 +52,20 @@ export default function () {
         `VU: ${vu}, Iter: ${iter}, Scenario: ${scenario}, Time: ${time}ms`
     );
 
-    // Example request
-    let res = http.get(`${BASE_URL.ENDPOINT}${SERVICE_URL.GET_ALL_PRRODUCTS}`);
-    check(res, {
-        "status is 200": (r) => r.status === 200,
+    group("Get all products", function () {
+        let res = http.get(`${BASE_URL.ENDPOINT}${SERVICE.GET_ALL_PRODUCTS}`);
+        check(res, {
+            "status is 200": (r) => r.status === 200,
+        });
+        sleep(Math.random() * 2 + 0.5);
     });
-    sleep(Math.random() * 2 + 0.5);
+
+    group("GET_ALL_ORDERS", function () {
+        let res = http.get(`${BASE_URL.ENDPOINT}${SERVICE.GET_ALL_ORDERS}`);
+        check(res, {
+            "status is 200": (r) => r.status === 200,
+        });
+        sleep(Math.random() * 2 + 0.5);
+    });
+
 }
