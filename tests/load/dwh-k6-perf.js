@@ -1,16 +1,16 @@
 import http from "k6/http";
 import { check, sleep } from "k6";
-import { BASE_URL, SERVICE } from "../config/url.js";
+import { BASE_URL, SERVICE } from "../../config/url.js";
 
-export const options = {
-  scenarios: {
-    smoke: {
-      executor: "constant-vus",
-      vus: 1,
-      duration: "1m",
-    },
-  },
-};
+// export const options = {
+//   scenarios: {
+//     smoke: {
+//       executor: "constant-vus",
+//       vus: 1,
+//       duration: "1m",
+//     },
+//   },
+// };
 
 export default function () {
   const res = http.get(`${BASE_URL.ENDPOINT}${SERVICE.GET_ALL_PRODUCTS}`);

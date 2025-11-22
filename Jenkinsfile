@@ -52,7 +52,7 @@ pipeline {
             steps {
                 sh '''
                     echo "Running k6 tests..."
-                    k6 run --out json=${K6_OUTPUT} ./perf/dwh-k6-perf.js
+                    k6 run --out json=${K6_OUTPUT} ./tests/load/dwh-k6-perf.js
                 '''
             }
         }
