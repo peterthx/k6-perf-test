@@ -1,92 +1,57 @@
 pipeline {
     agent any
-    
+
     triggers {
         // Poll GitHub every 1 minute for changes
         pollSCM('H/1 * * * *')
         // OR use GitHub webhook (recommended - comment out pollSCM if using webhook)
-        //githubPush()
+        githubPush()
     }
-
-    environment {
-        K6_OUTPUT = "result.json"
+    
+    parameters {
+        string(name: 'VUS', defaultValue: '10', description: 'Number of virtual users')
+        string(name: 'DURATION', defaultValue: '30s', description: 'Test duration')
     }
-
+    
     stages {
-
         stage('Checkout') {
             steps {
                 git branch: 'main',
-                    credentialsId: 'github-ssh-key',
-                    url: 'https://github.com/peterthx/k6-perf-test.git'
+                credentialsId: 'github-ssh-key',
+                url: 'https://github.com/peterthx/k6-perf-test.git'
             }
         }
-
-        stage('Build & Deploy Application') {
+        
+        stage('Run K6 Load Test') {
             steps {
-                sh '''
-                    echo "Building application..."
-                    # your build command
-                    # npm install
-                    # npm run build
-
-                    echo "Deploying application..."
-                    # your deploy command
-                    # docker build -t app:latest .
-                    # docker compose up -d
-                    # kubectl apply -f deployment.yaml
-                '''
+                sh """
+                    k6 run \
+                    --vus ${params.VUS} \
+                    --duration ${params.DURATION} \
+                    --out json=results.json \
+                    --out influxdb=http://influxdb:8086/k6 \
+                    test.js
+                """
             }
         }
-
-        stage('Install k6 if missing') {
+        
+        stage('Publish Results') {
             steps {
-                sh '''
-                    if ! command -v k6 >/dev/null 2>&1; then
-                        echo "Installing k6..."
-                        sudo apt update
-                        sudo apt install -y ca-certificates gnupg2
-                        sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A
-                        echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
-                        sudo apt update
-                        sudo apt install -y k6
-                    fi
-                '''
-            }
-        }
-
-        stage('Run k6 Performance Test') {
-            steps {
-                sh '''
-                    echo "Running k6 tests..."
-                    k6 run --out json=${K6_OUTPUT} ./tests/load/dwh-k6-perf.js
-                '''
-            }
-        }
-
-        stage('Generate Report') {
-            steps {
-                sh '''
-                    echo "Generating HTML report..."
-                    k6-reporter ${K6_OUTPUT} --out k6-report.html
-                '''
-            }
-        }
-
-        stage('Publish Report') {
-            steps {
-                publishHTML(target: [
+                publishHTML([
                     reportDir: '.',
-                    reportFiles: 'k6-report.html',
-                    reportName: 'K6 Performance Test Report'
+                    reportFiles: 'results.html',
+                    reportName: 'K6 Performance Report'
                 ])
             }
         }
     }
-
+    
     post {
-        always {
-            archiveArtifacts artifacts: 'result.json, k6-report.html', allowEmptyArchive: true
+        success {
+            echo 'K6 tests passed!'
+        }
+        failure {
+            echo 'K6 tests failed!'
         }
     }
 }
