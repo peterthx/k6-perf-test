@@ -3,9 +3,9 @@ pipeline {
     {
         triggers {
             // poll SCM every 2 minutes
-            // pollSCM('H/2 * * * *')
+            pollSCM('H/2 * * * *')
             // Or Trigger build on GitHub push
-            githubPush()
+           // githubPush()
         }
     }
     
