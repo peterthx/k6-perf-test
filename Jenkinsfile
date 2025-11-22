@@ -5,7 +5,7 @@ pipeline {
         // Poll GitHub every 2 minutes for changes
         pollSCM('H/2 * * * *')
         // OR use GitHub webhook (recommended - comment out pollSCM if using webhook)
-        // githubPush()
+        githubPush()
     }
     
     environment {
