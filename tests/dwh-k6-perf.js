@@ -1,6 +1,5 @@
 import http from "k6/http";
 import { check, sleep } from "k6";
-import { BASE_URL, SERVICE } from "../config/url.js";
 
 export let options = {
   vus: __ENV.VUS ? Number(__ENV.VUS) : 10,
@@ -12,7 +11,7 @@ export let options = {
 };
 
 export default function () {
-  const url = `${BASE_URL.ENDPOINT}${SERVICE.GET_ALL_PRODUCTS}`;
+  const url = "http://srv946485.hstgr.cloud:3000/api/products";
   const params = { tags: { name: "get-all-products" } };
 
   const res = http.get(url, params);
