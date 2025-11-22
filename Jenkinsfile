@@ -11,7 +11,7 @@ pipeline {
             steps {
                 git branch: 'main',
                     credentialsId: 'github-ssh-key',
-                    url: 'git@github.com:peterthx/k6-perf-test.git'
+                    url: 'https://github.com/peterthx/k6-perf-test.git'
             }
         }
 
