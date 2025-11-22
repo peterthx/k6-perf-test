@@ -1,107 +1,119 @@
 pipeline {
     agent any
 
-    // ----- TRIGGERS -----
     triggers {
-        // poll SCM every 2 minutes
+        // Poll GitHub every 2 minutes for changes
         pollSCM('H/2 * * * *')
-        // Or trigger build on GitHub push (ต้อง config GitHub webhook ที่ Jenkins ด้วย)
-        githubPush()
+        // OR use GitHub webhook (recommended - comment out pollSCM if using webhook)
+        // githubPush()
     }
-
-    // ----- ENV -----
+    
     environment {
-        GITHUB_REPO = 'https://github.com/peterthx/k6-perf-test.git'
-        // ถ้าเป็น multibranch จะมี env.BRANCH_NAME ให้ ถ้าไม่มีก็ตั้ง default เป็น main
-        DEFAULT_BRANCH = 'main'
+        // Define environment variables
+        GITHUB_REPO = 'your-username/your-repo-name'
+        BRANCH_NAME = "${env.GIT_BRANCH}"
+        BUILD_NUMBER = "${env.BUILD_NUMBER}"
     }
-
-    // ----- OPTIONS -----
+    
     options {
+        // Keep last 10 builds
         buildDiscarder(logRotator(numToKeepStr: '10'))
+        // Timeout for the entire pipeline
         timeout(time: 1, unit: 'HOURS')
+        // Disable concurrent builds
         disableConcurrentBuilds()
     }
-
+    
     stages {
         stage('Checkout') {
             steps {
-                script {
-                    def branch = env.BRANCH_NAME ?: env.GIT_BRANCH ?: env.DEFAULT_BRANCH
-                    echo "Checking out code from ${GITHUB_REPO}, branch: ${branch}"
-
-                    checkout([
-                        $class: 'GitSCM',
-                        branches: [[name: "*/${branch}"]],
-                        userRemoteConfigs: [[
-                            url: "${GITHUB_REPO}"
-                            // ถ้าใช้ HTTPS + credentials ให้ใส่ credentialsId ด้วย เช่น:
-                            // credentialsId: 'github-token-cred-id'
-                        ]]
-                    ])
-                }
-
-                sh 'git log -1 --pretty=format:"%h - %an, %ar : %s" || echo "No git history"'
+                echo 'Checking out code from GitHub...'
+                checkout scm
+                sh 'git log -1 --pretty=format:"%h - %an, %ar : %s"'
             }
         }
-
+        
         stage('Environment Info') {
             steps {
-                echo "Branch: ${env.BRANCH_NAME ?: env.GIT_BRANCH ?: env.DEFAULT_BRANCH}"
-                echo "Build Number: ${env.BUILD_NUMBER}"
-
+                echo "Branch: ${BRANCH_NAME}"
+                echo "Build Number: ${BUILD_NUMBER}"
                 sh 'node --version || echo "Node.js not installed"'
                 sh 'npm --version || echo "NPM not installed"'
                 sh 'java -version || echo "Java not installed"'
             }
         }
-
+        
         stage('Install Dependencies') {
             steps {
-                echo 'Installing dependencies (if needed)...'
-                // ถ้าโปรเจกต์คุณใช้ npm / yarn / ฯลฯ ก็ uncomment ตรงนี้
-                // sh 'npm install'
+                echo 'Installing dependencies...'
+                // Uncomment the line that matches your project type
+                sh 'npm install'                    // For Node.js
+                // sh 'mvn clean install'              // For Maven
+                // sh 'gradle build'                   // For Gradle
+                // sh 'pip install -r requirements.txt' // For Python
                 echo 'Skip installation (configure for your project)'
             }
         }
-
-        stage('Run k6 Tests') {
+        
+        stage('Build') {
             steps {
-                echo 'Running k6 performance tests...'
-
-                // เช็คว่ามี k6 ติดตั้งบน agent หรือยัง
-                sh 'k6 version || echo "k6 not installed on this agent"'
-
-                // รัน k6 script (แก้ path ให้ตรงกับ repo ของคุณ)
-                // ตัวอย่าง: sh 'k6 run scripts/test.js'
-                sh 'k6 run /perf/dwh-k6-perf.js || echo "k6 test script not found or failed"'
+                echo 'Building the application...'
+                // Uncomment the line that matches your project type
+                sh 'npm run build'                  // For Node.js
+                // sh 'mvn package'                    // For Maven
+                // sh 'gradle build'                   // For Gradle
+                // sh 'python setup.py build'          // For Python
+                echo 'Build step (configure for your project)'
             }
         }
-
+        
+        stage('Test') {
+            steps {
+                echo 'Running tests...'
+                // Uncomment the line that matches your project type
+                sh 'npm test'                       // For Node.js
+                // sh 'mvn test'                       // For Maven
+                // sh 'gradle test'                    // For Gradle
+                // sh 'pytest'                         // For Python
+                echo 'Test step (configure for your project)'
+            }
+        }
+        
         stage('Code Quality') {
             steps {
                 echo 'Running code quality checks...'
+                // Add your code quality tools here
+                sh 'npm run lint'                   // For ESLint
+                // sh 'sonar-scanner'                  // For SonarQube
                 echo 'Code quality step (configure for your project)'
             }
         }
-
+        
         stage('Deploy') {
             when {
-                branch 'main'
+                branch 'main'  // Only deploy from main branch
             }
             steps {
                 echo 'Deploying application...'
+                // Add your deployment commands here
+                // sh 'kubectl apply -f k8s/'         // For Kubernetes
+                // sh 'docker build -t app:latest .'  // For Docker
+                sh 'npm run deploy'                // For other deployments
                 echo 'Deploy step (configure for your project)'
             }
         }
     }
-
+    
     post {
         success {
             echo 'Pipeline completed successfully!'
+            // Add notifications here
+            // emailext body: 'Build succeeded!', subject: 'Jenkins Build Success', to: 'team@example.com'
         }
         failure {
             echo 'Pipeline failed!'
+            // Add notifications here
+            // emailext body: 'Build failed!', subject: 'Jenkins Build Failure', to: 'team@example.com'
         }
         always {
             echo 'Cleaning up workspace...'
