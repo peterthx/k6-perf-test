@@ -1,9 +1,11 @@
 import http from "k6/http";
 import { check, sleep } from "k6";
+import { BASE_URL,SERVICE } from "../config/url.js";
+
 
 export let options = {
-  vus: __ENV.VUS ? Number(__ENV.VUS) : 10,
-  duration: __ENV.DURATION || "30s",
+  vus: __ENV.VUS ? Number(__ENV.VUS) : 1,
+  duration: __ENV.DURATION || "1m",
   thresholds: {
     http_req_duration: ["p(95)<500"],
     checks: ["rate>0.95"],
@@ -11,11 +13,9 @@ export let options = {
 };
 
 export default function () {
-  const url = "http://srv946485.hstgr.cloud:3000/api/products";
-  const params = { tags: { name: "get-all-products" } };
-
+  const url = `${BASE_URL.ENDPOINT}${SERVICE.GET_ALL_SUPPLIERS}`;
+  const params = { tags: { name: "get-all-suppliers" } };
   const res = http.get(url, params);
-
   const contentType = res.headers["content-type"] || res.headers["Content-Type"] || "";
 
   check(res, {
@@ -25,5 +25,5 @@ export default function () {
     "body not empty": (r) => !!r.body && r.body.length > 0,
   });
 
-  sleep(1);
+  sleep(1)
 }
