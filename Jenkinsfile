@@ -2,15 +2,15 @@ pipeline {
     agent any
 
     triggers {
-        // Poll GitHub every 2 minutes for changes
-        pollSCM('H/2 * * * *')
+        // Poll GitHub every 1 minute for changes
+        pollSCM('H/1 * * * *')
         // OR use GitHub webhook (recommended - comment out pollSCM if using webhook)
-        // githubPush()
+        //githubPush()
     }
     
     environment {
         // Define environment variables
-        GITHUB_REPO = 'your-username/your-repo-name'
+        GITHUB_REPO = 'git@github.com:peterthx/k6-perf-test.git'
         BRANCH_NAME = "${env.GIT_BRANCH}"
         BUILD_NUMBER = "${env.BUILD_NUMBER}"
     }
