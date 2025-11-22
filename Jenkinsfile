@@ -3,7 +3,7 @@ pipeline {
 
     triggers {
         // Poll GitHub every 1 minute for changes
-        pollSCM('H/1 * * * *')
+        // pollSCM('H/1 * * * *')
         // OR use GitHub webhook (recommended - comment out pollSCM if using webhook)
         githubPush()
     }
