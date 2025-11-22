@@ -1,5 +1,12 @@
 pipeline {
     agent any
+    
+    triggers {
+        // Poll GitHub every 1 minute for changes
+        pollSCM('H/1 * * * *')
+        // OR use GitHub webhook (recommended - comment out pollSCM if using webhook)
+        //githubPush()
+    }
 
     environment {
         K6_OUTPUT = "result.json"
