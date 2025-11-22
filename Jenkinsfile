@@ -1,11 +1,5 @@
 pipeline {
-
-   agent {
-    docker {
-        image 'grafana/k6'
-        reuseNode true
-        }
-    }
+    agent any
 
     parameters {
         string(name: 'VUS', defaultValue: '10', description: 'Number of virtual users')
