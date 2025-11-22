@@ -22,16 +22,22 @@ pipeline {
             }
         }
         
-        stage('Run K6 Load Test') {
+      
+        stage('Run k6 Performance Test') {
             steps {
-                sh """
-                    k6 run \
-                    --vus ${params.VUS} \
-                    --duration ${params.DURATION} \
-                    --out json=results.json \
-                    --out influxdb=http://influxdb:8086/k6 \
-                    test.js
-                """
+                sh '''
+                    echo "Running k6 tests..."
+                    k6 run --out json=${K6_OUTPUT} ./tests/load/dwh-k6-perf.js
+                '''
+            }
+        }
+
+        stage('Generate Report') {
+            steps {
+                sh '''
+                    echo "Generating HTML report..."
+                    k6-reporter ${K6_OUTPUT} --out k6-report.html
+                '''
             }
         }
         
@@ -39,7 +45,7 @@ pipeline {
             steps {
                 publishHTML([
                     reportDir: '.',
-                    reportFiles: 'results.html',
+                    reportFiles: 'k6-report.html',
                     reportName: 'K6 Performance Report'
                 ])
             }
