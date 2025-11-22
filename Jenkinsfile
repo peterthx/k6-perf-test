@@ -1,5 +1,13 @@
 pipeline {
     agent any
+    {
+        triggers {
+            // poll SCM every 2 minutes
+            // pollSCM('H/2 * * * *')
+            // Or Trigger build on GitHub push
+            githubPush()
+        }
+    }
     
     environment {
         // Define environment variables
@@ -16,7 +24,9 @@ pipeline {
         // Disable concurrent builds
         disableConcurrentBuilds()
     }
-    
+    triggers {
+        githubPush()
+    }
     stages {
         stage('Checkout') {
             steps {
