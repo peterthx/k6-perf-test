@@ -1,123 +1,85 @@
 pipeline {
     agent any
 
-    triggers {
-        // Poll GitHub every 1 minute for changes
-        pollSCM('H/1 * * * *')
-        // OR use GitHub webhook (recommended - comment out pollSCM if using webhook)
-        //githubPush()
-    }
-    
     environment {
-        // Define environment variables
-        GITHUB_REPO = 'git@github.com:peterthx/k6-perf-test.git'
-        BRANCH_NAME = "${env.GIT_BRANCH}"
-        BUILD_NUMBER = "${env.BUILD_NUMBER}"
+        K6_OUTPUT = "result.json"
     }
-    
-    options {
-        // Keep last 10 builds
-        buildDiscarder(logRotator(numToKeepStr: '10'))
-        // Timeout for the entire pipeline
-        timeout(time: 1, unit: 'HOURS')
-        // Disable concurrent builds
-        disableConcurrentBuilds()
-    }
-    
+
     stages {
+
         stage('Checkout') {
             steps {
-                echo 'Checking out code from GitHub...'
-                checkout scm
-                sh 'git log -1 --pretty=format:"%h - %an, %ar : %s"'
+                git branch: 'main',
+                    credentialsId: 'github-ssh-key',
+                    url: 'git@github.com:peterthx/k6-perf-test.git'
             }
         }
-        
-        stage('Environment Info') {
+
+        stage('Build & Deploy Application') {
             steps {
-                echo "Branch: ${BRANCH_NAME}"
-                echo "Build Number: ${BUILD_NUMBER}"
-                sh 'node --version || echo "Node.js not installed"'
-                sh 'npm --version || echo "NPM not installed"'
-                sh 'java -version || echo "Java not installed"'
+                sh '''
+                    echo "Building application..."
+                    # your build command
+                    # npm install
+                    # npm run build
+
+                    echo "Deploying application..."
+                    # your deploy command
+                    # docker build -t app:latest .
+                    # docker compose up -d
+                    # kubectl apply -f deployment.yaml
+                '''
             }
         }
-        
-        stage('Install Dependencies') {
+
+        stage('Install k6 if missing') {
             steps {
-                echo 'Installing dependencies...'
-                // Uncomment the line that matches your project type
-                // sh 'npm install'                    // For Node.js
-                // sh 'mvn clean install'              // For Maven
-                // sh 'gradle build'                   // For Gradle
-                // sh 'pip install -r requirements.txt' // For Python
-                echo 'Skip installation (configure for your project)'
+                sh '''
+                    if ! command -v k6 >/dev/null 2>&1; then
+                        echo "Installing k6..."
+                        sudo apt update
+                        sudo apt install -y ca-certificates gnupg2
+                        sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A
+                        echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+                        sudo apt update
+                        sudo apt install -y k6
+                    fi
+                '''
             }
         }
-        
-        stage('Build') {
+
+        stage('Run k6 Performance Test') {
             steps {
-                echo 'Building the application...'
-                // Uncomment the line that matches your project type
-                //sh 'npm run build'                  // For Node.js
-                // sh 'mvn package'                    // For Maven
-                // sh 'gradle build'                   // For Gradle
-                // sh 'python setup.py build'          // For Python
-                echo 'Build step (configure for your project)'
+                sh '''
+                    echo "Running k6 tests..."
+                    k6 run --out json=${K6_OUTPUT} ./perf/dwh-k6-perf.js
+                '''
             }
         }
-        
-        stage('Test') {
+
+        stage('Generate Report') {
             steps {
-                echo 'Running tests...'
-                // Uncomment the line that matches your project type
-                //sh 'npm test'                       // For Node.js
-                // sh 'mvn test'                       // For Maven
-                // sh 'gradle test'                    // For Gradle
-                // sh 'pytest'                         // For Python
-                echo 'Test step (configure for your project)'
+                sh '''
+                    echo "Generating HTML report..."
+                    k6-reporter ${K6_OUTPUT} --out k6-report.html
+                '''
             }
         }
-        
-        stage('Code Quality') {
+
+        stage('Publish Report') {
             steps {
-                echo 'Running code quality checks...'
-                // Add your code quality tools here
-                // sh 'npm run lint'                   // For ESLint
-                // sh 'sonar-scanner'                  // For SonarQube
-                echo 'Code quality step (configure for your project)'
-            }
-        }
-        
-        stage('Deploy') {
-            when {
-                branch 'main'  // Only deploy from main branch
-            }
-            steps {
-                echo 'Deploying application...'
-                // Add your deployment commands here
-                // sh 'kubectl apply -f k8s/'         // For Kubernetes
-                // sh 'docker build -t app:latest .'  // For Docker
-                sh 'npm run deploy'                // For other deployments
-                echo 'Deploy step (configure for your project)'
+                publishHTML(target: [
+                    reportDir: '.',
+                    reportFiles: 'k6-report.html',
+                    reportName: 'K6 Performance Test Report'
+                ])
             }
         }
     }
-    
+
     post {
-        success {
-            echo 'Pipeline completed successfully!'
-            // Add notifications here
-            // emailext body: 'Build succeeded!', subject: 'Jenkins Build Success', to: 'team@example.com'
-        }
-        failure {
-            echo 'Pipeline failed!'
-            // Add notifications here
-            // emailext body: 'Build failed!', subject: 'Jenkins Build Failure', to: 'team@example.com'
-        }
         always {
-            echo 'Cleaning up workspace...'
-            cleanWs()
+            archiveArtifacts artifacts: 'result.json, k6-report.html', allowEmptyArchive: true
         }
     }
 }
