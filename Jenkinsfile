@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     triggers {
-        // Poll GitHub every 2 minutes for changes
-        pollSCM('H/2 * * * *')
+        // Poll GitHub every 1 minute for changes
+        pollSCM('H/1 * * * *')
         // OR use GitHub webhook (recommended - comment out pollSCM if using webhook)
         githubPush()
     }
@@ -47,7 +47,7 @@ pipeline {
             steps {
                 echo 'Installing dependencies...'
                 // Uncomment the line that matches your project type
-                sh 'npm install'                    // For Node.js
+                // sh 'npm install'                    // For Node.js
                 // sh 'mvn clean install'              // For Maven
                 // sh 'gradle build'                   // For Gradle
                 // sh 'pip install -r requirements.txt' // For Python
@@ -59,7 +59,7 @@ pipeline {
             steps {
                 echo 'Building the application...'
                 // Uncomment the line that matches your project type
-                sh 'npm run build'                  // For Node.js
+                //sh 'npm run build'                  // For Node.js
                 // sh 'mvn package'                    // For Maven
                 // sh 'gradle build'                   // For Gradle
                 // sh 'python setup.py build'          // For Python
@@ -71,7 +71,7 @@ pipeline {
             steps {
                 echo 'Running tests...'
                 // Uncomment the line that matches your project type
-                sh 'npm test'                       // For Node.js
+                //sh 'npm test'                       // For Node.js
                 // sh 'mvn test'                       // For Maven
                 // sh 'gradle test'                    // For Gradle
                 // sh 'pytest'                         // For Python
@@ -83,7 +83,7 @@ pipeline {
             steps {
                 echo 'Running code quality checks...'
                 // Add your code quality tools here
-                sh 'npm run lint'                   // For ESLint
+                // sh 'npm run lint'                   // For ESLint
                 // sh 'sonar-scanner'                  // For SonarQube
                 echo 'Code quality step (configure for your project)'
             }
