@@ -1,6 +1,6 @@
 import http from "k6/http";
 import { check, sleep } from "k6";
-import { BASE_URL, SERVICE } from "../../config/url.js";
+import { BASE_URL, SERVICE } from "../config/url.js";
 
 export let options = {
   vus: __ENV.VUS ? Number(__ENV.VUS) : 10,
