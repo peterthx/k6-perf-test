@@ -1,7 +1,7 @@
 import http from "k6/http";
 import { check, sleep } from "k6";
-import { BASE_URL,SERVICE } from "../config/url.js";
-
+import { BASE_URL, SERVICE } from "../config/url.js";
+import { decrypt } from "../utils/crypto.js";
 
 export let options = {
   vus: __ENV.VUS ? Number(__ENV.VUS) : 1,
@@ -13,10 +13,14 @@ export let options = {
 };
 
 export default function () {
-  const url = `${BASE_URL.ENDPOINT}${SERVICE.GET_ALL_SUPPLIERS}`;
+  const decryptedBaseUrl = decrypt(BASE_URL.ENDPOINT);
+  const decryptedService = decrypt(SERVICE.GET_ALL_SUPPLIERS);
+  const url = `${decryptedBaseUrl}${decryptedService}`;
+  
   const params = { tags: { name: "get-all-suppliers" } };
   const res = http.get(url, params);
-  const contentType = res.headers["content-type"] || res.headers["Content-Type"] || "";
+  const contentType =
+    res.headers["content-type"] || res.headers["Content-Type"] || "";
 
   check(res, {
     "status is 200": (r) => r.status === 200,
@@ -25,5 +29,5 @@ export default function () {
     "body not empty": (r) => !!r.body && r.body.length > 0,
   });
 
-  sleep(1)
+  sleep(1);
 }
