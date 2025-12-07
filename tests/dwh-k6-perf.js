@@ -14,10 +14,15 @@ export let options = {
 
 export default function () {
   const decryptedBaseUrl = decrypt(BASE_URL.ENDPOINT);
-  const decryptedService = decrypt(SERVICE.GET_ALL_SUPPLIERS);
+  const decryptedService = decrypt(
+    SERVICE.GET_ALL_SUPPLIERS && SERVICE.GET_ALL_PRODUCTS,
+  );
   const url = `${decryptedBaseUrl}${decryptedService}`;
-  
-  const params = { tags: { name: "get-all-suppliers" } };
+
+  const params = {
+    tags: { name: "get-all-suppliers" },
+    tags: { name: "get-all-products" },
+  };
   const res = http.get(url, params);
   const contentType =
     res.headers["content-type"] || res.headers["Content-Type"] || "";
