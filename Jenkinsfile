@@ -1,15 +1,13 @@
 pipeline {
     agent any
-    environment {
-        SECRET_KEY = credentials('K6_SECRET_KEY')
-    }
+
     triggers {
         cron('H 5 * * *')
     }
     stages {
         stage('Checkout code'){
             steps {
-                git branch: "${env.BRANCH_NAME}", url: 'https://github.com/peterthx/k6-perf-test.git'
+                git branch:'main', url: 'https://github.com/peterthx/k6-perf-test.git'
             }
         }
         stage('Build') {
