@@ -12,13 +12,12 @@ pipeline {
         }
         stage('Build') {
             steps {
-                sh "npm install"
-                sh "npx webpack"
+                sh "npm install && npx webpack"
             }
         }
         stage('Test'){
             steps {
-                sh 'k6 run dist/dwh-k6-perf.bundle.js'
+                sh 'k6 run dist/dwh-k6-perf.bundle.js  --quiet'
             }
         }
     }
